@@ -1,0 +1,33 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页</title>
+</head>
+<body>
+
+    <div>
+        <p>
+            {{Name}}
+        </p>
+        <p>
+            {{Age}}
+        </p>
+
+        <p>
+            {{Accounts[0]}}
+        </p>
+        <p>
+            {{Accounts[1]}}
+        </p>
+        <ul>
+            {{#each hobbies}}
+            <li>
+                {{this.Name}}
+            </li>
+            {{/each}}
+        </ul>
+    </div>
+</body>
+</html>
