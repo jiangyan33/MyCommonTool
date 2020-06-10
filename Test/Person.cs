@@ -9,6 +9,6 @@ namespace MyCommonTool.Test
         public int Age { get; set; }
         public List<string> Accounts { get; set; }
         public List<Hobby> Hobbies { get; set; }
-        public DateTime CreateDate { get; set; }
+        public DateTime CreateDate { get; set; } = DateTime.Now;
     }
 }

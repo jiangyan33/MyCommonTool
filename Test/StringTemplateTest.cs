@@ -22,10 +22,12 @@ namespace MyCommonTool.Test
                 {
                     new Hobby
                     {
-                        Name="C#"
+                        Id= Guid.NewGuid().ToString(),
+                        Name ="C#"
                     },
                      new Hobby
                     {
+                        Id= Guid.NewGuid().ToString(),
                         Name="JavaScript"
                     }
                 }

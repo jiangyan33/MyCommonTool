@@ -41,8 +41,14 @@ namespace MyCommonTool.Utils
         public static T GetAttrValue<T>(this object instance, string AttrName)
         {
             var prop = instance.GetType().GetProperties().ToList().Find(it => it.Name.ToLower() == AttrName.ToLower());
-            if (prop == null) return default;
-            return (T)prop.GetValue(instance, null);
+            try
+            {
+                return (T)prop.GetValue(instance, null);
+            }
+            catch
+            {
+                return default;
+            };
         }
     }
 }

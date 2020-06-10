@@ -32,7 +32,7 @@ namespace MyCommonTool.Utils
         /// <returns></returns>
         public string Compile(object source)
         {
-            string[] pattern = { "{{/each}}", "{{#each", "{{", "}}" };
+            string[] pattern = { "{{", "}}" };
 
             // 方法的参数一定要全
             var stringArr = _tempString.Split(pattern, StringSplitOptions.None);
@@ -57,34 +57,16 @@ namespace MyCommonTool.Utils
                             char[] charPattern = { '[', ']' };
                             var resArr = stringList[i].Trim().Split(charPattern, StringSplitOptions.RemoveEmptyEntries);
                             int index = Convert.ToInt32(resArr[1]);
-                            var list = prop.GetValue(source, null);
-                            if ((list as List<string>) != null)
-                            {
-                                stringBuilder.Append((list as List<string>)[index]);
-                            }
-                            else if ((list as List<int>) != null)
-                            {
-                                stringBuilder.Append((list as List<int>)[index]);
-                            }
-                            else if ((list as List<double>) != null)
-                            {
-                                stringBuilder.Append((list as List<double>)[index]);
-                            }
-                            else if ((list as List<decimal>) != null)
-                            {
-                                stringBuilder.Append((list as List<decimal>)[index]);
-                            }
-                            else if ((list as List<DateTime>) != null)
-                            {
-                                stringBuilder.Append((list as List<DateTime>)[index].ToString(DateFormat));
-                            }
+                            var list = prop.GetValue(source, null) as IList;
+                            // 区分开来基本数据类型和日期类型
+                            stringBuilder.Append(prop.PropertyType == typeof(List<DateTime>) ? Convert.ToDateTime(list[index]).ToString(DateFormat) : list[index]);
                         }
                 }
                 else if (props.Find(it => it.Name == stringList[i].Trim()) != null)
                 {
                     var prop = props.Find(it => it.Name == stringList[i].Trim());
                     // 如果是基本数据类型直接替换
-                    if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(double) || prop.PropertyType == typeof(decimal))
+                    if (prop.PropertyType == typeof(int) || prop.PropertyType == typeof(double) || prop.PropertyType == typeof(string) || prop.PropertyType == typeof(decimal))
                     {
                         stringBuilder.Append(prop.GetValue(source, null));
                     }
@@ -92,83 +74,58 @@ namespace MyCommonTool.Utils
                     {
                         stringBuilder.Append(Convert.ToDateTime(prop.GetValue(source, null)).ToString(DateFormat));
                     }
-                    else if (prop.PropertyType == typeof(List<int>) || prop.PropertyType == typeof(List<double>) || prop.PropertyType == typeof(List<decimal>) || prop.PropertyType == typeof(List<string>) || prop.PropertyType == typeof(List<DateTime>))
+                }
+                else if (stringList[i].Trim().IndexOf("#each") != -1)
+                {
+                    // 寻找与之对应的结束节点索引
+                    var index = stringList.FindIndex(i, it => it == "/each");
+                    var resArr = stringList[i].Trim().Split(" ");
+                    var prop = props.Find(it => it.Name == resArr[1].Trim());
+                    if (prop != null)
                     {
-                        // 基本数据类型的集合 该次循环的次算，外层循环就不需要执行了
-                        int count = 0;
-                        var list = prop.GetValue(source, null) as IList;
-                        for (int j = i + 1, k = 0; j < stringList.Count; j++, k++)
+                        if (prop.PropertyType == typeof(List<int>) || prop.PropertyType == typeof(List<double>) || prop.PropertyType == typeof(List<decimal>) || prop.PropertyType == typeof(List<string>) || prop.PropertyType == typeof(List<DateTime>))
                         {
-                            if (stringList[j].Contains("this"))
+                            // 执行循环遍历
+                            var list = prop.GetValue(source, null) as IList;
+                            for (int j = 0; j < list.Count; j++)
                             {
-                                if (prop.PropertyType == typeof(List<DateTime>))
+                                // 需要循环的数据为从i到index之间的数据
+                                for (int k = i + 1; k < index; k++)
                                 {
-                                    stringBuilder.Append(Convert.ToDateTime(list[k]).ToString(DateFormat));
+                                    if (stringList[k].Contains("this"))
+                                    {
+                                        stringBuilder.Append(prop.PropertyType == typeof(List<DateTime>) ? Convert.ToDateTime(list[j]).ToString(DateFormat) : list[j]);
+                                    }
+                                    else
+                                    {
+                                        stringBuilder.Append(stringList[k]);
+                                    }
                                 }
-                                else
-                                {
-                                    stringBuilder.Append(list[k]);
-                                }
                             }
-                            else if (props.FindIndex(it => it.Name == stringList[j].Trim()) != -1)
-                            {
-                                // 碰到下一个特殊值的时候停止
-                                i += count;
-                                break;
-                            }
-                            else if (j == stringList.Count - 1)
-                            {
-                                stringBuilder.Append(stringList[j]);
-                                // 已经遍历到最后一个了，直接结束,最后一个需要为非特殊元素
-                                return stringBuilder.ToString();
-                            }
-                            else
-                            {
-                                stringBuilder.Append(stringList[j]);
-                            }
-                            count++;
                         }
-                    }
-                    else
-                    {
-                        // 对象数据类型的集合
-                        int count = 0;
-                        var list = prop.GetValue(source, null) as IList;
-                        for (int j = i + 1, k = 0; j < stringList.Count; j++, k++)
+                        else
                         {
-                            if (stringList[j].Contains("this."))
+                            // 对象遍历 执行循环遍历
+                            var list = prop.GetValue(source, null) as IList;
+                            for (int j = 0; j < list.Count; j++)
                             {
-                                var resArr = stringList[j].Split("this.");
-                                var value = list[k].GetAttrValue<DateTime>(resArr[1].Trim());
-                                if (value == default)
+                                // 需要循环的数据为从i到index之间的数据
+                                for (int k = i + 1; k < index; k++)
                                 {
-                                    // 非日期类型
-                                    stringBuilder.Append(list[k].GetAttrValue<object>(resArr[1].Trim()));
+                                    if (stringList[k].Contains("this."))
+                                    {
+                                        var resArrTemp = stringList[k].Split("this.");
+                                        var value = list[j].GetAttrValue<DateTime>(resArrTemp[1]);
+                                        stringBuilder.Append(value == default ? list[j].GetAttrValue<object>(resArrTemp[1]) : value.ToString(DateFormat));
+                                    }
+                                    else
+                                    {
+                                        stringBuilder.Append(stringList[k]);
+                                    }
                                 }
-                                else
-                                {
-                                    // 日期类型
-                                    stringBuilder.Append(value.ToString(DateFormat));
-                                }
                             }
-                            else if (props.FindIndex(it => it.Name == stringList[j].Trim()) != -1)
-                            {
-                                // 碰到下一个特殊值的时候停止
-                                i += count;
-                                break;
-                            }
-                            else if (j == stringList.Count - 1)
-                            {
-                                stringBuilder.Append(stringList[j]);
-                                // 已经遍历到最后一个了，直接结束,最后一个需要为非特殊元素
-                                return stringBuilder.ToString();
-                            }
-                            else
-                            {
-                                stringBuilder.Append(stringList[j]);
-                            }
-                            count++;
                         }
+                        i = index + 1;
                     }
                 }
                 else
