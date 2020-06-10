@@ -13,18 +13,17 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Remove="jiangyan.png" />
-		<None Remove="Test\index.html" />
-		<None Include="Resource\jiangyan.png">
-		  <Pack>True</Pack>
-		  <PackagePath></PackagePath>
-		</None>
+		<Compile Remove="Test\**" />
+		<EmbeddedResource Remove="Test\**" />
+		<None Remove="Test\**" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Content Include="Test\index.html">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
+		<None Remove="jiangyan.png" />
+		<None Include="Resource\jiangyan.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup>

@@ -6,6 +6,9 @@ using System.Text;
 
 namespace MyCommonTool.Utils
 {
+    /// <summary>
+    /// 简单的字符串模板
+    /// </summary>
     public class StringTemplate
     {
         private string _tempString { get; set; }
