@@ -4,11 +4,21 @@
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<Authors>jiangyan</Authors>
 		<Description>封装一些简单的工具类，比如字符串模板、实体类的动态元素获取、DataTable序列化为实体类对象。后期会逐渐扩展</Description>
-		<Copyright />
+		<Copyright>jiangyan</Copyright>
+		<RepositoryUrl>https://github.com/jiangyan33/MyCommonTool.git</RepositoryUrl>
+		<PackageIcon>jiangyan.png</PackageIcon>
+		<PackageReleaseNotes>1.0.0.0仅仅实现一部分功能，后期会逐渐扩充</PackageReleaseNotes>
+		<NeutralLanguage />
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<None Remove="jiangyan.png" />
 		<None Remove="Test\index.html" />
+		<None Include="Resource\jiangyan.png">
+		  <Pack>True</Pack>
+		  <PackagePath></PackagePath>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup>
