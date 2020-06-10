@@ -21,8 +21,22 @@
         <p>
             {{Accounts[1]}}
         </p>
+
         <ul>
-            {{#each hobbies}}
+            {{#each Accounts}}
+            <li>
+                {{this}}
+                {{this}}
+            </li>
+            {{/each}}
+        </ul>
+        <ul>
+            {{#each Hobbies}}
+            {{this.Name}}
+            <li>
+                {{this.Id}}
+                {{this.CreateDate}}
+            </li>
             <li>
                 {{this.Name}}
             </li>
@@ -31,3 +45,4 @@
     </div>
 </body>
 </html>
+{{CreateDate}}

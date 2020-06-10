@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace MyCommonTool.Test
 {
@@ -8,5 +9,6 @@ namespace MyCommonTool.Test
         public int Age { get; set; }
         public List<string> Accounts { get; set; }
         public List<Hobby> Hobbies { get; set; }
+        public DateTime CreateDate { get; set; }
     }
 }
