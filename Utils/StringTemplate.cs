@@ -125,7 +125,7 @@ namespace MyCommonTool.Utils
                                 }
                             }
                         }
-                        i = index + 1;
+                        i = index;
                     }
                 }
                 else

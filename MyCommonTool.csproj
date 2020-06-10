@@ -1,20 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<Authors>jiangyan</Authors>
+		<Description>封装一些简单的工具类，比如字符串模板、实体类的动态元素获取、DataTable序列化为实体类对象。后期会逐渐扩展</Description>
+		<Copyright />
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="Test\index.html" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="Test\index.html" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Content Include="Test\index.html">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
+	<ItemGroup>
+		<Content Include="Test\index.html">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Modules\" />
-  </ItemGroup>
+	<ItemGroup>
+		<Folder Include="Modules\" />
+	</ItemGroup>
 </Project>
