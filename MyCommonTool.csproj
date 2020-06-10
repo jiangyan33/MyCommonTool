@@ -11,6 +11,8 @@
 		<NeutralLanguage />
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<RepositoryType>github</RepositoryType>
+		<AssemblyVersion>1.0.1.0</AssemblyVersion>
+		<FileVersion>1.0.1.0</FileVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
