@@ -9,7 +9,7 @@
 		<PackageIcon>jiangyan.png</PackageIcon>
 		<PackageReleaseNotes>2.0.0.0仅仅实现一部分功能，后期会逐渐扩充</PackageReleaseNotes>
 		<NeutralLanguage />
-		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<RepositoryType>github</RepositoryType>
 		<AssemblyVersion>2.0.1.0</AssemblyVersion>
 		<FileVersion>1.0.1.0</FileVersion>

@@ -101,3 +101,5 @@
     Console.WriteLine(name); // jiangyan
     Console.WriteLine(count); // 
 ```
+2.0版本新增一些公用方法
+  全角转半角、AES加密解密、Sha1加密、整数转换中文(仅支持1万以内)、url中query参数的相关操作、随机字符串、当前时间戳等等
