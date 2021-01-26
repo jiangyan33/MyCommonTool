@@ -7,12 +7,13 @@
 		<Copyright>jiangyan</Copyright>
 		<RepositoryUrl>https://github.com/jiangyan33/MyCommonTool.git</RepositoryUrl>
 		<PackageIcon>jiangyan.png</PackageIcon>
-		<PackageReleaseNotes>1.0.0.0仅仅实现一部分功能，后期会逐渐扩充</PackageReleaseNotes>
+		<PackageReleaseNotes>2.0.0.0仅仅实现一部分功能，后期会逐渐扩充</PackageReleaseNotes>
 		<NeutralLanguage />
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 		<RepositoryType>github</RepositoryType>
-		<AssemblyVersion>1.0.1.0</AssemblyVersion>
+		<AssemblyVersion>2.0.1.0</AssemblyVersion>
 		<FileVersion>1.0.1.0</FileVersion>
+		<Version>2.0.0</Version>
 	</PropertyGroup>
 
 	<ItemGroup>
