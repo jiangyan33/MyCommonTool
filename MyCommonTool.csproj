@@ -14,7 +14,7 @@
 		<RepositoryType>github</RepositoryType>
 		<AssemblyVersion>3.0.1.0</AssemblyVersion>
 		<FileVersion>3.0.1.0</FileVersion>
-		<Version>2.0.0</Version>
+		<Version>3.0.0</Version>
 		<PackageProjectUrl>https://github.com/jiangyan33/MyCommonTool</PackageProjectUrl>
 	</PropertyGroup>
 
