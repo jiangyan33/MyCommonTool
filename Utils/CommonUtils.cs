@@ -10,7 +10,10 @@ using System.Threading.Tasks;
 
 namespace MyCommonTool.Utils
 {
-    public static class Utils
+    /// <summary>
+    /// 封装一些通用的方法
+    /// </summary>
+    public static class CommonUtils
     {
         #region 数据库序列化相关
 
@@ -224,7 +227,12 @@ namespace MyCommonTool.Utils
 
         #region 类型转换
 
-        public static KeyValuePair<string, object>[] ConvertObjToKeyPair(object obj)
+        /// <summary>
+        /// 实体类序列化为占位符需要的格式参数
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static object[] ConvertObjToKeyPairObject(object obj)
         {
             var type = obj.GetType();
             var list = new List<KeyValuePair<string, object>>();
@@ -232,12 +240,17 @@ namespace MyCommonTool.Utils
             {
                 list.Add(new KeyValuePair<string, object>(item.Name, item.GetValue(obj, null)));
             }
-            return list.ToArray();
+            return list.ToArray().Cast<object>().ToArray(); ;
         }
 
-        public static object[] ConvertObjToKeyPairObject(object obj)
+        /// <summary>
+        /// 移除时间中的毫秒值信息
+        /// </summary>
+        /// <param name="dateTime"></param>
+        /// <returns></returns>
+        public static DateTime CutMillisecondFromDateTime(this DateTime dateTime)
         {
-            return ConvertObjToKeyPair(obj).Cast<object>().ToArray();
+            return new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, dateTime.Hour, dateTime.Minute, dateTime.Second);
         }
 
         #endregion 类型转换
