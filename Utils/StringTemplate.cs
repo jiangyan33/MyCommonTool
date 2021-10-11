@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace MyCommonTool.Utils
 {
@@ -47,7 +48,8 @@ namespace MyCommonTool.Utils
             var stringBuilder = new StringBuilder();
             for (int i = 0; i < stringList.Count; i++)
             {
-                if (stringList[i].Contains("["))
+                var regex = new Regex("[0-9]]");
+                if (regex.IsMatch(stringList[i]))
                 {
                     // 数组下标格式
                     var attr = stringList[i].Split('[')[0].Trim();
