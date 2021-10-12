@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace MyCommonTool.Utils
 {
@@ -15,232 +13,20 @@ namespace MyCommonTool.Utils
     /// </summary>
     public static class CommonUtils
     {
-        #region 数据库序列化相关
+
+        #region 日期操作
 
         /// <summary>
-        /// 将DbDataReader序列化成对象，如果DataTable中和对象中存在相同的字段名，就会赋值，否则不会赋值 包含分页数据
+        /// 解析时间戳为日期类型
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="reader">游标</param>
-        /// <param name="ignoreTableUnderline">是否忽略数据库表字段中的下划线</param>
+        /// <param name="timeStamp"></param>
         /// <returns></returns>
-        public async static Task<(List<T>, long rows)> SerializeToPageObject<T>(this DbDataReader reader, bool ignoreTableUnderline = true) where T : new()
+        public static DateTime ToDateTime(this long timeStamp)
         {
-            var posts = new List<T>();
-            var rows = 0L;
-            if (reader == null) return (posts, rows);
-            using (reader)
-            {
-                if (!reader.HasRows) return (posts, rows);
-                var columnList = reader.GetColumnSchema();
-
-                var type = typeof(T);
-                var props = type.GetProperties();
-                var columns = columnList.Select(c =>
-                new
-                {
-                    ProptyName = ignoreTableUnderline ?
-                        c.ColumnName.Replace("_", "").ToLower() :
-                        c.ColumnName.ToLower(),
-                    c.ColumnName
-                }
-            );
-                if (columns.Count() == 0)
-                    return (posts, rows);
-                var getDefaultValue = new Func<Type, object>(propType =>
-                {
-                    // 如果是可空类型，直接返回null
-                    if (Nullable.GetUnderlyingType(propType) != null)
-                        return null;
-                    else
-                    {
-                        // 如果时非可空类型 直接获取默认值
-                        // 如果不是值类型，直接返回null
-                        return propType.IsValueType ? Activator.CreateInstance(propType) : null;
-                    }
-                });
-                var convertTypeToProperty = new Func<Type, object, object>((prop, value) =>
-                {
-                    try
-                    {
-                        // 当datatable中字段的值为空时，需要根据实体类的属性类型来初始化默认值
-                        if (value == null || value == DBNull.Value)
-                        {
-                            return getDefaultValue(prop);
-                        }
-                        // 当datatable中字段的值不为空时，将其转换为属性类型，如果失败，则抛出异常。
-                        else
-                        {
-                            var t = Nullable.GetUnderlyingType(prop) ?? prop;
-                            return Convert.ChangeType(value, t);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        throw ex;
-                    }
-                });
-                while (await reader.ReadAsync())
-                {
-                    var obj = new T();
-                    foreach (var prop in props)
-                    {
-                        var c = columns.Where(x => x.ProptyName.ToLower() == prop.Name.ToLower()).FirstOrDefault();
-                        if (c != null)
-                        {
-                            try
-                            {
-                                // 类型相同直接赋值
-                                if (reader[c.ColumnName].GetType().FullName == prop.PropertyType.FullName)
-                                    prop.SetValue(obj, reader[c.ColumnName], null);
-                                // 类型不同，将table的类型转换为属性的类型，转换失败时赋值为当前类型的默认值
-                                else
-                                    prop.SetValue(obj, convertTypeToProperty(prop.PropertyType, reader[c.ColumnName]), null);
-                            }
-                            catch (Exception ex)
-                            {
-                                throw ex;
-                            }
-                        }
-                    }
-                    posts.Add(obj);
-                }
-                if (await reader.NextResultAsync())
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        rows = Convert.ToInt64(reader["totalRecords"]);
-                    }
-                }
-            }
-            return (posts, rows);
-        }
-
-        /// <summary>
-        /// 将DbDataReader序列化成对象，如果DataTable中和对象中存在相同的字段名，就会赋值，否则不会赋值，没有分页数据
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="reader">游标</param>
-        /// <param name="ignoreTableUnderline">是否忽略数据库表字段中的下划线</param>
-        /// <returns></returns>
-        public async static Task<List<T>> SerializeToObject<T>(this DbDataReader reader, bool ignoreTableUnderline = true) where T : new()
-        {
-            var posts = new List<T>();
-            if (reader == null) return posts;
-            using (reader)
-            {
-                if (!reader.HasRows) return posts;
-                var columnList = reader.GetColumnSchema();
-
-                var type = typeof(T);
-                var props = type.GetProperties();
-                var columns = columnList.Select(c =>
-                new
-                {
-                    ProptyName = ignoreTableUnderline ?
-                        c.ColumnName.Replace("_", "").ToLower() :
-                        c.ColumnName.ToLower(),
-                    c.ColumnName
-                }
-            );
-                if (columns.Count() == 0)
-                    return posts;
-                var getDefaultValue = new Func<Type, object>(propType =>
-                {
-                    // 如果是可空类型，直接返回null
-                    if (Nullable.GetUnderlyingType(propType) != null)
-                        return null;
-                    else
-                    {
-                        // 如果时非可空类型 直接获取默认值
-                        // 如果不是值类型，直接返回null
-                        return propType.IsValueType ? Activator.CreateInstance(propType) : null;
-                    }
-                });
-                var convertTypeToProperty = new Func<Type, object, object>((prop, value) =>
-                {
-                    try
-                    {
-                        // 当datatable中字段的值为空时，需要根据实体类的属性类型来初始化默认值
-                        if (value == null || value == DBNull.Value)
-                        {
-                            return getDefaultValue(prop);
-                        }
-                        // 当datatable中字段的值不为空时，将其转换为属性类型，如果失败，则抛出异常。
-                        else
-                        {
-                            var t = Nullable.GetUnderlyingType(prop) ?? prop;
-                            return Convert.ChangeType(value, t);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        throw ex;
-                    }
-                });
-                while (await reader.ReadAsync())
-                {
-                    var obj = new T();
-                    foreach (var prop in props)
-                    {
-                        var c = columns.Where(x => x.ProptyName.ToLower() == prop.Name.ToLower()).FirstOrDefault();
-                        if (c != null)
-                        {
-                            try
-                            {
-                                // 类型相同直接赋值
-                                if (reader[c.ColumnName].GetType().FullName == prop.PropertyType.FullName)
-                                    prop.SetValue(obj, reader[c.ColumnName], null);
-                                // 类型不同，将table的类型转换为属性的类型，转换失败时赋值为当前类型的默认值
-                                else
-                                    prop.SetValue(obj, convertTypeToProperty(prop.PropertyType, reader[c.ColumnName]), null);
-                            }
-                            catch (Exception ex)
-                            {
-                                throw ex;
-                            }
-                        }
-                    }
-                    posts.Add(obj);
-                }
-            }
-            return posts;
-        }
-
-        /// <summary>
-        /// 判断是否查下到数据
-        /// </summary>
-        /// <param name="reader"></param>
-        /// <returns></returns>
-        public static bool IsExist(this DbDataReader reader)
-        {
-            bool result = false;
-            if (reader == null) return result;
-            using (reader)
-            {
-                result = reader.HasRows;
-            }
-            return result;
-        }
-
-        #endregion 数据库序列化相关
-
-        #region 类型转换
-
-        /// <summary>
-        /// 实体类序列化为占位符需要的格式参数
-        /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        public static object[] ConvertObjToKeyPairObject(object obj)
-        {
-            var type = obj.GetType();
-            var list = new List<KeyValuePair<string, object>>();
-            foreach (PropertyInfo item in type.GetProperties())
-            {
-                list.Add(new KeyValuePair<string, object>(item.Name, item.GetValue(obj, null)));
-            }
-            return list.ToArray().Cast<object>().ToArray(); ;
+            long longTime = 621355968000000000;
+            int samllTime = 10000000;
+            DateTime dateTime = new DateTime(longTime + timeStamp * samllTime, DateTimeKind.Utc).ToLocalTime();
+            return dateTime;
         }
 
         /// <summary>
@@ -253,7 +39,17 @@ namespace MyCommonTool.Utils
             return new DateTime(dateTime.Year, dateTime.Month, dateTime.Day, dateTime.Hour, dateTime.Minute, dateTime.Second);
         }
 
-        #endregion 类型转换
+        /// <summary>
+        /// 当前的时间戳
+        /// </summary>
+        /// <returns></returns>
+        public static string GetTimeStamp()
+        {
+            TimeSpan ts = DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0);
+            return Convert.ToInt64(ts.TotalSeconds).ToString();
+        }
+
+        #endregion 日期操作
 
         #region 加密解密
 
@@ -272,12 +68,10 @@ namespace MyCommonTool.Utils
             var vi = new byte[16];
             for (int i = 0; i < 16; i++) vi[i] = keyByte[i];
 
-            using (SymmetricAlgorithm algorithm = Aes.Create())
-            using (ICryptoTransform encryptor = algorithm.CreateEncryptor(keyByte, vi))
-            {
-                var resultByte = encryptor.TransformFinalBlock(strByte, 0, strByte.Length);
-                return Convert.ToBase64String(resultByte, 0, resultByte.Length);
-            }
+            using SymmetricAlgorithm algorithm = Aes.Create();
+            using ICryptoTransform encryptor = algorithm.CreateEncryptor(keyByte, vi);
+            var resultByte = encryptor.TransformFinalBlock(strByte, 0, strByte.Length);
+            return Convert.ToBase64String(resultByte, 0, resultByte.Length);
         }
 
         /// <summary>
@@ -294,17 +88,102 @@ namespace MyCommonTool.Utils
             var keyByte = Encoding.UTF8.GetBytes(key);
             var vi = new byte[16];
             for (int i = 0; i < 16; i++) vi[i] = keyByte[i];
-            using (SymmetricAlgorithm algorithm = Aes.Create())
-            using (ICryptoTransform encryptor = algorithm.CreateDecryptor(keyByte, vi))
-            {
-                var resByte = encryptor.TransformFinalBlock(strByte, 0, strByte.Length);
-                return Encoding.UTF8.GetString(resByte);
-            }
+            using SymmetricAlgorithm algorithm = Aes.Create();
+            using ICryptoTransform encryptor = algorithm.CreateDecryptor(keyByte, vi);
+            var resByte = encryptor.TransformFinalBlock(strByte, 0, strByte.Length);
+            return Encoding.UTF8.GetString(resByte);
+        }
+
+        /// <summary>
+        /// Sha1加密，采用UTF-8编码
+        /// </summary>
+        /// <param name="content"></param>
+        /// <returns></returns>
+        public static string Sha1(string content)
+        {
+            using var sha1 = SHA1.Create();
+            return BitConverter.ToString(sha1.ComputeHash(Encoding.UTF8.GetBytes(content))).Replace("-", "").ToLower();
         }
 
         #endregion 加密解密
 
         #region 字符串操作
+
+        /// <summary>
+        /// 字符串大驼峰和下划线相互转换
+        /// </summary>
+        /// <param name="src"></param>
+        /// <returns></returns>
+        public static string StrChange(this string src)
+        {
+            if (string.IsNullOrEmpty(src)) return "";
+
+            var regex = new Regex("[A-Z]");
+            var charStr = '_';
+            if (regex.IsMatch(src[0].ToString()))
+            {
+                // 大驼峰
+                var stringBuilder = new StringBuilder();
+                foreach (var item in src)
+                {
+                    if (regex.IsMatch(item.ToString()))
+                    {
+                        stringBuilder.Append(charStr);
+                        stringBuilder.Append(item.ToString().ToLower());
+                    }
+                    else
+                    {
+                        stringBuilder.Append(item);
+                    }
+                }
+                return stringBuilder.ToString().TrimStart(charStr);
+            }
+            else
+            {
+                // 下划线
+                var strArr = src.Split(charStr);
+                var stringBuilder = new StringBuilder();
+                foreach (var item in strArr)
+                {
+                    for (var i = 0; i < item.Length; i++)
+                    {
+                        stringBuilder.Append(i == 0 ? item[i].ToString().ToUpper() : item[i].ToString());
+                    }
+                }
+                return stringBuilder.ToString().TrimStart(charStr);
+            }
+        }
+
+        /// <summary>
+        /// 类型转换，数据库字段类型转换为C#字段类型
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="isNull"></param>
+        /// <returns></returns>
+        public static string MySqlTypeChange(this string src, bool isNull = false)
+        {
+            var result = src switch
+            {
+                "varchar" => "string",
+                "datetime" => "DateTime",
+                "decimal" => "decimal",
+                "tinyint" => "int",
+                "int" => "int",
+                "bigint" => "long",
+                _ => throw new Exception("类型匹配失败，未知类型，请联系管理员"),
+            };
+            if (isNull && result != "string") result += "?";
+            return result;
+        }
+
+        /// <summary>
+        /// 随机生成长度11位的随机字符串
+        /// </summary>
+        /// <returns></returns>
+        public static string NonceStr()
+        {
+            return Guid.NewGuid().ToString("N").Substring(2, 11);
+        }
 
         /// <summary>
         ///  全角转半角
@@ -369,36 +248,6 @@ namespace MyCommonTool.Utils
         }
 
         /// <summary>
-        /// Sha1加密，采用UTF-8编码
-        /// </summary>
-        /// <param name="content"></param>
-        /// <returns></returns>
-        public static string Sha1(string content)
-        {
-            using var sha1 = SHA1.Create();
-            return BitConverter.ToString(sha1.ComputeHash(Encoding.UTF8.GetBytes(content))).Replace("-", "").ToLower();
-        }
-
-        /// <summary>
-        /// 当前的时间戳
-        /// </summary>
-        /// <returns></returns>
-        public static string GetTimeStamp()
-        {
-            TimeSpan ts = DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0);
-            return Convert.ToInt64(ts.TotalSeconds).ToString();
-        }
-
-        /// <summary>
-        /// 随机生成长度11位的随机字符串
-        /// </summary>
-        /// <returns></returns>
-        public static string NonceStr()
-        {
-            return Guid.NewGuid().ToString("N").Substring(2, 11);
-        }
-
-        /// <summary>
         /// 将整数转为小写的中文数字,(一万以内的数据)
         /// </summary>
         /// <param name="ni_intInput"></param>
@@ -452,7 +301,7 @@ namespace MyCommonTool.Utils
         }
 
         /// <summary>
-        /// url中的query参数序列化位字典类型
+        /// url中的query参数序列化为字典类型
         /// </summary>
         /// <param name="uri"></param>
         /// <returns></returns>
@@ -507,31 +356,7 @@ namespace MyCommonTool.Utils
                     result += $"&&{item.Name}={value}";
                 }
             }
-            return "?" + (result.Length > 2 ? result.Substring(2) : result);
-        }
-
-        /// <summary>
-        /// 将驼峰格式调整为下划线
-        /// </summary>
-        /// <param name="attrName"></param>
-        /// <returns></returns>
-        public static string ChangeAttrToLineName(this string attrName)
-        {
-            if (attrName.Length <= 1) return attrName;
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.Append(attrName.ToLower()[0]);
-            for (int i = 1; i < attrName.Length; i++)
-            {
-                if ('A' <= attrName[i] && attrName[i] <= 'Z')
-                {
-                    stringBuilder.Append($"_{attrName[i]}".ToLower());
-                }
-                else
-                {
-                    stringBuilder.Append(attrName[i]);
-                }
-            }
-            return stringBuilder.ToString();
+            return "?" + (result.Length > 2 ? result[2..] : result);
         }
 
         #endregion 字符串操作

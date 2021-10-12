@@ -12,9 +12,14 @@ namespace MyCommonTool.Utils
     /// </summary>
     public class StringTemplate
     {
-        private string _tempString { get; set; }
+
+        private readonly string _tempString;
         private string DateFormat { get; set; } = "yyyy-MM-dd HH:mm:ss";
 
+        /// <summary>
+        /// 构建模板字符串
+        /// </summary>
+        /// <param name="tempString"></param>
         public StringTemplate(string tempString)
         {
             _tempString = tempString;
@@ -28,6 +33,32 @@ namespace MyCommonTool.Utils
         {
             DateFormat = dateFormat;
         }
+
+        /// <summary>
+        /// Model生成模板
+        /// </summary>
+        public static string GetModelTemplate() =>
+@$"using SqlSugar;
+using System;
+
+namespace {{{{NameStr}}}}
+{{
+
+    /// <summary>
+    /// {{{{TableComment}}}}
+    /// </summary>
+    [SugarTable(nameof({{{{TableName}}}}))]
+    public class {{{{TableName}}}} : BaseEntity
+    {{
+       {{{{#each Columns}}}}
+        /// <summary>
+        /// {{{{this.ColumnComment}}}}
+        /// </summary>
+        [SugarColumn]
+        public {{{{this.DataType}}}} {{{{this.ColumnName}}}} {{ get; set; }}
+        {{{{/each}}}}
+    }}
+}}";
 
         /// <summary>
         /// 暂时实现3种数据结构，具体请参考测试中的html文件
@@ -141,6 +172,10 @@ namespace MyCommonTool.Utils
             return stringBuilder.ToString();
         }
 
+        /// <summary>
+        /// 获取字符串模板
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             return _tempString;
